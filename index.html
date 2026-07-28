@@ -421,15 +421,28 @@
   const TARGET_WIDTH = 230; // same as .qr-card width
 
   function fitWatermarkWidth(){
+    wmEl.style.fontSize = '26px';
     wmEl.style.letterSpacing = '0px';
     const naturalWidth = wmEl.scrollWidth;
     const gaps = wmChars.length - 1;
-    const extra = (TARGET_WIDTH - naturalWidth) / gaps;
-    wmEl.style.letterSpacing = extra + 'px';
+
+    if(naturalWidth > TARGET_WIDTH){
+      // text is naturally wider than the target even with zero spacing
+      // (can happen with different font rendering on some devices) —
+      // shrink the font instead of using negative letter-spacing,
+      // since negative spacing causes characters to overlap
+      const scale = TARGET_WIDTH / naturalWidth;
+      wmEl.style.fontSize = (26 * scale) + 'px';
+      wmEl.style.letterSpacing = '0px';
+    } else {
+      const extra = (TARGET_WIDTH - naturalWidth) / gaps;
+      wmEl.style.letterSpacing = Math.max(extra, 0) + 'px';
+    }
   }
   window.addEventListener('load', fitWatermarkWidth);
   // fallback in case fonts load late
   setTimeout(fitWatermarkWidth, 300);
+  window.addEventListener('resize', fitWatermarkWidth);
 
   // ---- Info rows: value font-size matches the label's font-size ----
   function fitInfoRows(){
