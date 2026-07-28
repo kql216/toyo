@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TOYO-PASS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --gold-top:#c5a24a;
+    --gold-mid:#bd9940;
+    --gold-bottom:#b38f3a;
+    --ink:#ffffff;
+    --card-bg:#ffffff;
+    --warn:#e0473a;
+    --btn-bg:#241f19;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:#3a3226;
+  }
+  .phone{
+    max-width:390px;
+    margin:0 auto;
+    min-height:100vh;
+    background:linear-gradient(180deg, var(--gold-top) 0%, var(--gold-mid) 60%, var(--gold-bottom) 100%);
+    display:flex;
+    flex-direction:column;
+    color:var(--ink);
+    position:relative;
+    overflow:hidden;
+  }
+  .phone::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0; height:260px;
+    background:radial-gradient(120% 100% at 50% -20%, rgba(255,255,255,0.25), rgba(255,255,255,0) 60%);
+    pointer-events:none;
+  }
+
+  /* Header */
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    padding:18px 16px 8px;
+  }
+  .back-arrow{
+    position:absolute;
+    left:16px;
+    font-size:22px;
+    color:var(--ink);
+    line-height:1;
+    cursor:pointer;
+    opacity:0.85;
+    user-select:none;
+  }
+  .header-title{
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+
+  /* Date/time */
+  .datetime{
+    text-align:center;
+    margin-top:14px;
+  }
+  .date-line{
+    font-size:34px;
+    font-weight:400;
+    letter-spacing:1px;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    line-height:1;
+  }
+  .time-line{
+    font-size:44px;
+    font-weight:700;
+    letter-spacing:1px;
+    margin-top:-4px;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    line-height:1;
+  }
+
+  /* QR card */
+  .qr-wrap{
+    display:flex;
+    justify-content:center;
+    margin-top:20px;
+  }
+  .qr-card{
+    background:var(--card-bg);
+    border-radius:16px;
+    padding:20px;
+    width:230px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.18);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  #qrcode{
+    position:relative;
+    width:180px;
+    height:180px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #qrcode img, #qrcode canvas{
+    width:180px !important;
+    height:180px !important;
+    image-rendering:pixelated;
+  }
+  .qr-logo{
+    position:absolute;
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:#ffffff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 0 4px #ffffff;
+  }
+  .qr-timer{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    margin-top:14px;
+    font-size:14px;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .refresh-btn{
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.75);
+    background:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    padding:0;
+    color:#ffffff;
+    transition:transform 0.25s ease;
+  }
+  .refresh-btn svg{
+    width:12px;
+    height:12px;
+  }
+  .refresh-btn.spin{
+    animation:spin 0.5s linear;
+  }
+  @keyframes spin{
+    from{transform:rotate(0deg);}
+    to{transform:rotate(360deg);}
+  }
+
+  /* Watermark fade text */
+  .watermark-wrap{
+    width:230px;
+    margin:20px auto 0;
+  }
+  .watermark{
+    text-align:center;
+    font-size:26px;
+    font-weight:800;
+    color:var(--ink);
+    white-space:nowrap;
+    height:34px;
+    line-height:34px;
+  }
+  .watermark .wm-char{
+    display:inline-block;
+    opacity:0;
+    transition:opacity 0.35s ease;
+  }
+
+  /* Info section (no card, sits directly on gold background) */
+  .info-card{
+    width:230px;
+    margin:16px auto 0;
+    padding:0;
+  }
+  .info-row{
+    display:flex;
+    align-items:flex-start;
+    padding:1.75px 0;
+    font-size:18px;
+    gap:1em;
+  }
+  .info-label{
+    width:76px;
+    flex-shrink:0;
+    color:rgba(255,255,255,0.85);
+    font-weight:700;
+    padding-top:1px;
+    white-space:nowrap;
+  }
+  .info-value{
+    flex:1;
+    font-weight:800;
+    line-height:1.15;
+    color:var(--ink);
+    min-width:0;
+  }
+  .just-line{
+    display:inline-block;
+    white-space:nowrap;
+  }
+  .just-line-wrap{
+    white-space:normal;
+    display:inline;
+  }
+
+  /* Warning */
+  .warning{
+    text-align:center;
+    color:var(--warn);
+    font-size:11px;
+    line-height:1.6;
+    margin-top:18px;
+    padding:0 24px;
+    font-weight:600;
+  }
+
+  /* Bottom button */
+  .bottom-area{
+    margin-top:auto;
+    padding:20px 16px calc(20px + env(safe-area-inset-bottom));
+  }
+  .scan-btn{
+    width:100%;
+    background:transparent;
+    color:#ffffff;
+    border:1.5px solid #ffffff;
+    border-radius:26px;
+    padding:15px 0;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    cursor:pointer;
+  }
+  .scan-btn:active{
+    opacity:0.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="header">
+    <span class="back-arrow">&#8592;</span>
+    <span class="header-title">TOYO-PASS</span>
+  </div>
+
+  <div class="datetime">
+    <div class="date-line" id="dateLine">2026/07/28</div>
+    <div class="time-line" id="timeLine">00:00:00</div>
+  </div>
+
+  <div class="qr-wrap">
+    <div class="qr-card">
+      <div id="qrcode">
+        <div class="qr-logo" id="qrLogo">
+          <!--
+            ロゴ画像を表示するには、このHTMLファイルと同じフォルダに
+            "logo.png"という名前でロゴ画像を保存してください。
+            (著作権保護のため、実際のロゴ画像はこちらでは埋め込めません)
+          -->
+          <img src="logo.png" alt="university logo"
+               style="width:100%;height:100%;object-fit:contain;border-radius:50%;"
+               onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'font-size:10px;color:#999;text-align:center;line-height:1.3;\'>logo.png<br>を配置</div>';">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="qr-timer">
+    <span id="countdown">05:00</span>
+    <button class="refresh-btn" id="refreshBtn" aria-label="QRコードを更新">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 12a8 8 0 0 1 13.66-5.66L20 8M20 4v4h-4M20 12a8 8 0 0 1-13.66 5.66L4 16m0 4v-4h4"
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="watermark-wrap">
+    <div class="watermark" id="watermarkText">
+      <span class="wm-char">T</span><span class="wm-char">O</span><span class="wm-char">Y</span><span class="wm-char">O</span><span class="wm-char">&nbsp;</span><span class="wm-char">U</span><span class="wm-char">N</span><span class="wm-char">I</span><span class="wm-char">V</span><span class="wm-char">E</span><span class="wm-char">R</span><span class="wm-char">S</span><span class="wm-char">I</span><span class="wm-char">T</span><span class="wm-char">Y</span>
+    </div>
+  </div>
+
+  <div class="info-card" id="infoCard">
+    <div class="info-row">
+      <div class="info-label">学籍番号</div>
+      <div class="info-value"><span class="just-line">1B10220105</span></div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">氏名</div>
+      <div class="info-value"><span class="just-line">秋山海斗</span></div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">学年</div>
+      <div class="info-value"><span class="just-line">M1 2セメスタ</span></div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">所属</div>
+      <div class="info-value"><span class="just-line">総合情報学部</span><br><span class="just-line">総合情報学科</span><br><span class="just-line">メディア文化</span><br><span class="just-line">コース</span></div>
+    </div>
+  </div>
+
+  <div class="warning">
+    他人への貸与(学生証含む)を禁じます。<br>
+    懲戒処分の対象となる場合があります。
+  </div>
+
+  <div class="bottom-area">
+    <button class="scan-btn">イベントQRをスキャン</button>
+  </div>
+</div>
+
+<script>
+  // ---- Real-time date/time ----
+  function pad(n){ return n.toString().padStart(2,'0'); }
+  const dateLineEl = document.getElementById('dateLine');
+  const timeLineEl = document.getElementById('timeLine');
+
+  function fitDateWidthToTime(){
+    // reset to base size, measure natural widths, then scale date font-size
+    const baseSize = 34;
+    dateLineEl.style.fontSize = baseSize + 'px';
+    const dateWidth = dateLineEl.scrollWidth;
+    const timeWidth = timeLineEl.scrollWidth;
+    if(dateWidth > 0){
+      const newSize = baseSize * (timeWidth / dateWidth);
+      dateLineEl.style.fontSize = newSize + 'px';
+    }
+  }
+
+  function updateClock(){
+    const now = new Date();
+    dateLineEl.textContent =
+      `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
+    timeLineEl.textContent =
+      `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    fitDateWidthToTime();
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ---- QR code generation ----
+  let qr = null;
+  function randomPayload(){
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let s = 'TOYOPASS:';
+    for(let i=0;i<24;i++){ s += chars[Math.floor(Math.random()*chars.length)]; }
+    s += ':' + Date.now();
+    return s;
+  }
+  function renderQR(){
+    const container = document.getElementById('qrcode');
+    // remove old canvas/img but keep the logo element
+    const logo = document.getElementById('qrLogo');
+    container.innerHTML = '';
+    qr = new QRCode(container, {
+      text: randomPayload(),
+      width: 180,
+      height: 180,
+      colorDark: '#1a1a1a',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    container.appendChild(logo);
+  }
+  renderQR();
+
+  // ---- Countdown (5 minutes) ----
+  const TOTAL_SECONDS = 5 * 60;
+  let remaining = TOTAL_SECONDS;
+  const countdownEl = document.getElementById('countdown');
+  function renderCountdown(){
+    const m = Math.floor(remaining/60);
+    const s = remaining%60;
+    countdownEl.textContent = `${pad(m)}:${pad(s)}`;
+  }
+  renderCountdown();
+  let countdownTimer = setInterval(()=>{
+    remaining--;
+    if(remaining <= 0){
+      remaining = TOTAL_SECONDS;
+      renderQR();
+    }
+    renderCountdown();
+  }, 1000);
+
+  // ---- Manual refresh ----
+  document.getElementById('refreshBtn').addEventListener('click', (e)=>{
+    const btn = e.currentTarget;
+    btn.classList.remove('spin');
+    void btn.offsetWidth; // restart animation
+    btn.classList.add('spin');
+    remaining = TOTAL_SECONDS;
+    renderCountdown();
+    renderQR();
+  });
+
+  // ---- Watermark: stretch to QR card width, then cycle reveal ----
+  const wmEl = document.getElementById('watermarkText');
+  const wmChars = Array.from(wmEl.querySelectorAll('.wm-char'));
+  const TARGET_WIDTH = 230; // same as .qr-card width
+
+  function fitWatermarkWidth(){
+    wmEl.style.letterSpacing = '0px';
+    const naturalWidth = wmEl.scrollWidth;
+    const gaps = wmChars.length - 1;
+    const extra = (TARGET_WIDTH - naturalWidth) / gaps;
+    wmEl.style.letterSpacing = extra + 'px';
+  }
+  window.addEventListener('load', fitWatermarkWidth);
+  // fallback in case fonts load late
+  setTimeout(fitWatermarkWidth, 300);
+
+  // ---- Info rows: value font-size matches the label's font-size ----
+  function fitInfoRows(){
+    const labelEl = document.querySelector('.info-label');
+    const labelSize = window.getComputedStyle(labelEl).fontSize;
+    document.querySelectorAll('.info-value .just-line').forEach(l=>{
+      l.style.fontSize = labelSize;
+    });
+  }
+  window.addEventListener('load', fitInfoRows);
+  setTimeout(fitInfoRows, 300);
+
+  function runWatermarkCycle(){
+    // 1) fully hide all characters
+    wmChars.forEach(c => c.style.opacity = '0');
+
+    // 2) sequentially reveal each character
+    const stepDelay = 90; // ms between each character appearing
+    wmChars.forEach((c, i)=>{
+      setTimeout(()=>{ c.style.opacity = '1'; }, 300 + i * stepDelay);
+    });
+
+    const revealDuration = 300 + wmChars.length * stepDelay;
+    const holdDuration = 1400;
+    const fadeOutAt = revealDuration + holdDuration;
+
+    // 3) fade all out together
+    setTimeout(()=>{
+      wmChars.forEach(c => c.style.opacity = '0');
+    }, fadeOutAt);
+
+    const gapBeforeRestart = 500;
+    const totalCycle = fadeOutAt + 350 /*fade-out transition*/ + gapBeforeRestart;
+    setTimeout(runWatermarkCycle, totalCycle);
+  }
+  runWatermarkCycle();
+</script>
+
+</body>
+</html>
