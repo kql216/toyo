@@ -7,9 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
-    --gold-top:#c5a24a;
-    --gold-mid:#bd9940;
-    --gold-bottom:#b38f3a;
+    --gold:#b8934a;
     --ink:#ffffff;
     --card-bg:#ffffff;
     --warn:#e0473a;
@@ -19,26 +17,19 @@
   html,body{
     margin:0; padding:0; height:100%;
     font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-    background:#b38f3a;
+    background:var(--gold);
     overscroll-behavior:none;
   }
   .phone{
     max-width:390px;
     margin:0 auto;
     min-height:100dvh;
-    background:linear-gradient(180deg, var(--gold-top) 0%, var(--gold-mid) 60%, var(--gold-bottom) 100%);
+    background:var(--gold);
     display:flex;
     flex-direction:column;
     color:var(--ink);
     position:relative;
     overflow:hidden;
-  }
-  .phone::before{
-    content:"";
-    position:absolute;
-    top:0; left:0; right:0; height:260px;
-    background:radial-gradient(120% 100% at 50% -20%, rgba(255,255,255,0.25), rgba(255,255,255,0) 60%);
-    pointer-events:none;
   }
 
   /* Header */
